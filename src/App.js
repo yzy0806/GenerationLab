@@ -23,7 +23,7 @@ export default class App extends Component {
 		  <ul>
 		    <li>As a student, I want to see a map of Mexico City</li>
 		    <li>As a student, I want to see a map that has all the stores represented as markers/pins on the map.</li>
-		    <li>Bonus: As a student, I want to be able to click on a store and add it to a list of 'My Favorite Stores'</li>
+		    <li>As a student, I want to be able to click on a store and add it to a list of 'My Favorite Stores'</li>
 		  </ul>
 
 		  <p>Helpful tips:</p>
