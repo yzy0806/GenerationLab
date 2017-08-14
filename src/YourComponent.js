@@ -8,13 +8,14 @@ import _ from 'lodash';
  *
  */
 
-const apiKey = 'AIzaSyCRHD4PvyN3T9Z8y6GRpk6diLILMcMpTDE';
+const apiKey = 'AIzaSyA5ba29IyViT1Oui93AOwx3c_0dUXjh_Jo';
 
 export default class YourComponent extends Component {
 
   constructor(props) {
     super(props);
     this.state = { selectedItem: [], stores: [] };
+    this.removeElement = this.removeElement.bind(this);
   }
 
   _onChildClick = (key) => {
@@ -26,6 +27,10 @@ export default class YourComponent extends Component {
     }
   }
 
+  removeElement (name) {
+    const selectedArray = _.remove(this.state.selectedItem, (item) => {return item.Name !== name});
+    this.setState( {selectedItem: selectedArray });
+  }
 
   static get defaultProps() {
     return {
@@ -38,23 +43,29 @@ export default class YourComponent extends Component {
     fetch('../store_directory.json')
     .then((res) => res.json())
     .then((data) => {
-      _.each(data, (store) => {
+      _.each(data, (store, index) => {
         const geoCodingString = `https://maps.googleapis.com/maps/api/geocode/json?address=${store.Address}&key=${apiKey}`
-        promises.push(fetch(geoCodingString));
+        // Delay each request for 10 milliseconds to avoid Google API limit
+        _.delay(()=>promises.push(fetch(geoCodingString)), index*10);
       });
-      Promise.all(promises).then(values => {
-        let secondaryPromises = [];
-        for (let val of values) {
-          secondaryPromises.push(val.json());
-        }
-        Promise.all(secondaryPromises).then(vals => {
-          for (let i =0; i<data.length; i++) {
+      _.delay(() => {
+        // Wait for all promises has been fulfilled
+        Promise.all(promises).then(values => {
+          let secondaryPromises = [];
+          for (let val of values) {
+            secondaryPromises.push(val.json());
+          }
+          Promise.all(secondaryPromises).then(vals => {
+            for (let i =0; i<data.length; i++) {
+              // update the store directory with location information
               _.assign(data[i], { Location:vals[i] });
             };
-          this.setState({stores: _.filter(data, (datum) => {return datum.Location.status === 'OK'})});
+            // Use only responses have valid location information from google map API
+            this.setState({stores: _.filter(data, (datum) => {return datum.Location.status === 'OK'})});
           });
         })
-        }
+      },data.length*11)
+      }
       );
    }
 
@@ -85,7 +96,11 @@ export default class YourComponent extends Component {
           List of selected stores
           <ul>
             { this.state.selectedItem.map( (item, index) =>(
-                <li key={index}>{JSON.stringify(item.Name)}</li>
+            <div>
+              <li key={index}>{JSON.stringify(item.Name)}</li>
+              <p onClick={() => this.removeElement(item.Name)}>REMOVE</p>
+            </div>
+
               ))
             }
           </ul>
